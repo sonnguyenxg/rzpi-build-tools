@@ -1,8 +1,8 @@
 #!/bin/bash
 
-ARM_GCC_VERSION=10.3
+ARM_GCC_VERSION="SDK"
 if [ "${ARM_GCC_VERSION}" == "SDK" ] ; then
-source /opt/poky/3.1.31/environment-setup-aarch64-poky-linux
+source /opt/poky/3.1.26/environment-setup-aarch64-poky-linux
 else
 ## gcc 10.3 default
 TOOLCHAIN_PATH=$HOME/toolchain/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin
@@ -11,11 +11,14 @@ export ARCH=arm64
 export CROSS_COMPILE=aarch64-none-linux-gnu-
 fi
 
-UBOOT_GIT_URL="https://github.com/Avnet/renesas-u-boot.git"
-TFA_GIT_URL="https://github.com/Avnet/trusted-firmware-a.git"
+UBOOT_DIR="u-boot-sst"
+TFA_DIR="rz-atf-sst"
 
-UBOOT_BRANCH="rzboard_v2l_v2021.10_r3"
-TFA_BRANCH="rzboard_v2.9_rz"
+UBOOT_GIT_URL="https://github.com/vudangRVC/u-boot-sst.git"
+TFA_GIT_URL="https://github.com/vudangRVC/rz-atf-sst.git"
+
+UBOOT_BRANCH="dunfell/rz-sbc"
+TFA_BRANCH="dunfell/rz-sbc"
 
 
 #===============MAIN BODY NO NEED TO CHANGE=========================
@@ -25,7 +28,7 @@ cat << EOF
 usage :  $bn <option>
 options:
   -h        display this help and exit
-  -rz       build boot image for the RzBaord
+  -rzpi       build boot image for the RZPI Novtech board
   -clean    clean the build files for all projects
   -g        get all the code to build boot image
 Example:
@@ -114,8 +117,8 @@ mk_getcode()
 mk_uboot()
 {
     cd ${WORKPWD}/${UBOOT_DIR}/
-    if [ "${SOC_TYPE}" == "rzboard" ] ; then
-        make rzboard_defconfig
+    if [ "${SOC_TYPE}" == "rzpi" ] ; then
+        make rzpi_defconfig
     else
         make smarc-rzv2l_defconfig
     fi
@@ -128,7 +131,7 @@ mk_atf()
     cd ${WORKPWD}/${TFA_DIR}/
     case ${SOC_TYPE} in
         rzv2l)      echo "build atf for rz"; make PLAT=v2l BOARD=smarc_pmic_2  bl2 bl31;;
-        rzboard)    echo "build atf for rz"; make PLAT=v2l BOARD=rzboard  bl2 bl31;;
+        rzpi)    echo "build atf for rz"; make PLAT=g2l BOARD=sbc_1 DEBUG=1 all;;
     esac
     [ $? -ne 0 ] && log_error "Failed in ${TFA_DIR} ..." && exit
 }
@@ -185,7 +188,7 @@ function main_process(){
 			-v|--version) echo "version 1.03" ; exit ;;
 			-cl*)  mk_clean ; exit ;;
 			-g)    mk_getcode ; exit ;;
-			-rz) SOC_TYPE="rzboard"; echo ${SOC_TYPE};;
+			-rz) SOC_TYPE="rzpi"; echo ${SOC_TYPE};;
 			-v2l) SOC_TYPE="rzv2l"; echo ${SOC_TYPE};;
 			*)  log_error "-- invalid option -- "; help; exit;;
 		esac
