@@ -14,8 +14,8 @@ fi
 UBOOT_DIR="u-boot-sst"
 TFA_DIR="rz-atf-sst"
 
-UBOOT_GIT_URL="https://github.com/vudangRVC/u-boot-sst.git"
-TFA_GIT_URL="https://github.com/vudangRVC/rz-atf-sst.git"
+UBOOT_GIT_URL="git@github.com:vudangRVC/u-boot-sst.git"
+TFA_GIT_URL="git@github.com:vudangRVC/rz-atf-sst.git"
 
 UBOOT_BRANCH="dunfell/rz-sbc"
 TFA_BRANCH="dunfell/rz-sbc"
@@ -131,7 +131,7 @@ mk_atf()
     cd ${WORKPWD}/${TFA_DIR}/
     case ${SOC_TYPE} in
         rzv2l)      echo "build atf for rz"; make PLAT=v2l BOARD=smarc_pmic_2  bl2 bl31;;
-        rzpi)    echo "build atf for rz"; make PLAT=g2l BOARD=sbc_1 DEBUG=1 all;;
+        rzpi)    echo "build atf for rzpi"; unset CFLAGS LDFLAGS; make PLAT=g2l BOARD=sbc_1 all;
     esac
     [ $? -ne 0 ] && log_error "Failed in ${TFA_DIR} ..." && exit
 }
@@ -162,12 +162,12 @@ mk_bootimage()
 	## BUILDMODE=debug
 	BUILDMODE=release
 	# Create bl2_bp.bin
-	./bootparameter build/v2l/${BUILDMODE}/bl2.bin bl2_bp.bin
-	cat build/v2l/${BUILDMODE}/bl2.bin >> bl2_bp.bin
+	./bootparameter build/g2l/${BUILDMODE}/bl2.bin bl2_bp.bin
+	cat build/g2l/${BUILDMODE}/bl2.bin >> bl2_bp.bin
 
 	# Create fip.bin
 	cp ../${UBOOT_DIR}/u-boot.bin ./
-	./fiptool create --align 16 --soc-fw build/v2l/${BUILDMODE}/bl31.bin --nt-fw ./u-boot.bin fip.bin
+	./fiptool create --align 16 --soc-fw build/g2l/${BUILDMODE}/bl31.bin --nt-fw ./u-boot.bin fip.bin
 
 	# Convert to srec
 	objcopy -O srec --adjust-vma=0x00011E00 --srec-forceS3 -I binary bl2_bp.bin bl2_bp.srec
@@ -176,10 +176,8 @@ mk_bootimage()
 }
 
 function main_process(){
-	SOC_TYPE="rzv2l"
+	SOC_TYPE="rzpi"
 	WORKPWD=$(pwd)
-	UBOOT_DIR="renesas-u-boot"
-	TFA_DIR="trusted-firmware-a"
 
     [ $# -eq 0 ] && help && exit
 	while [ $# -gt 0 ]; do
@@ -188,7 +186,7 @@ function main_process(){
 			-v|--version) echo "version 1.03" ; exit ;;
 			-cl*)  mk_clean ; exit ;;
 			-g)    mk_getcode ; exit ;;
-			-rz) SOC_TYPE="rzpi"; echo ${SOC_TYPE};;
+			-rzpi) SOC_TYPE="rzpi"; echo ${SOC_TYPE};;
 			-v2l) SOC_TYPE="rzv2l"; echo ${SOC_TYPE};;
 			*)  log_error "-- invalid option -- "; help; exit;;
 		esac
