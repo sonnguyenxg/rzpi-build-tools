@@ -1,0 +1,5 @@
+Flash_Writer_SCIF_rzpi.mot
+bl2_bp_rzpi.srec
+fip_rzpi.srec
+rz-atf-sst/
+u-boot-sst/
