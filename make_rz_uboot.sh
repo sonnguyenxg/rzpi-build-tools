@@ -28,6 +28,7 @@ usage :  $bn <option>
 options:
   -h        display this help and exit
   -rzpi       build boot image for the RZPI Novtech board
+  -v2l       build boot image for the RZV2L board
   -clean    clean the build files for all projects
   -g        get all the code to build boot image
 Example:
@@ -117,22 +118,38 @@ mk_uboot()
 {
     cd ${WORKPWD}/${UBOOT_DIR}/
     if [ "${SOC_TYPE}" == "rzpi" ] ; then
-        make rzpi_defconfig
-    else
-        make smarc-rzv2l_defconfig
-    fi
-    make -j16
-    [ $? -ne 0 ] && log_error "Failed in ${UBOOT_DIR} ..." && exit
+		make clean
+		make distclean
+		make rzpi_defconfig
+	elif [ "${SOC_TYPE}" == "v2l" ] ; then
+		make clean
+		make distclean
+		make smarc-rzv2l_defconfig
+	else
+		make smarc-rzv2l_defconfig
+	fi
+	make -j16
+	[ $? -ne 0 ] && log_error "Failed in ${UBOOT_DIR} ..." && exit
 }
 
 mk_atf()
 {
     cd ${WORKPWD}/${TFA_DIR}/
     case ${SOC_TYPE} in
-        rzv2l)      echo "build atf for rz"; make -j16 PLAT=v2l BOARD=smarc_pmic_2  bl2 bl31;;
-        rzpi)    echo "build atf for rzpi"; unset CFLAGS LDFLAGS; make -j16 PLAT=g2l BOARD=sbc_1 all;
-    esac
-    [ $? -ne 0 ] && log_error "Failed in ${TFA_DIR} ..." && exit
+		rzpi)
+			echo "build atf for rzpi";
+			unset CFLAGS LDFLAGS;
+			make clean;
+			make distclean;
+			make -j16 PLAT=g2l BOARD=sbc_1 all;;
+		v2l)
+			echo "build atf for rzv2l";
+			unset CFLAGS LDFLAGS;
+			make clean;
+			make distclean;
+			make -j16 PLAT=v2l BOARD=smarc_pmic_2 bl2 bl31;;
+	esac
+	[ $? -ne 0 ] && log_error "Failed in ${TFA_DIR} ..." && exit
 }
 
 check_extra_tools()
@@ -161,15 +178,15 @@ mk_bootimage()
 	## BUILDMODE=debug
 	BUILDMODE=release
 	# Create bl2_bp.bin
-	./bootparameter build/g2l/${BUILDMODE}/bl2.bin bl2_bp.bin
-	cat build/g2l/${BUILDMODE}/bl2.bin >> bl2_bp.bin
+	./bootparameter build/${SOC_TYPE}/${BUILDMODE}/bl2.bin bl2_bp.bin
+	cat build/${SOC_TYPE}/${BUILDMODE}/bl2.bin >> bl2_bp.bin
 
 	# Create fip.bin
 	cp ../${UBOOT_DIR}/u-boot.bin ./
-	./fiptool create --align 16 --soc-fw build/g2l/${BUILDMODE}/bl31.bin --nt-fw ./u-boot.bin fip.bin
+	./fiptool create --align 16 --soc-fw build/${SOC_TYPE}/${BUILDMODE}/bl31.bin --nt-fw ./u-boot.bin fip.bin
 
 	# cp ../${UBOOT_DIR}/u-boot-nodtb.bin ./
-	# ./fiptool create --align 16 --soc-fw build/g2l/${BUILDMODE}/bl31.bin --nt-fw ./u-boot-nodtb.bin fip.bin
+	# ./fiptool create --align 16 --soc-fw build/${SOC_TYPE}/${BUILDMODE}/bl31.bin --nt-fw ./u-boot-nodtb.bin fip.bin
 
 	# Convert to srec
 	objcopy -O srec --adjust-vma=0x00011E00 --srec-forceS3 -I binary bl2_bp.bin bl2_bp.srec
@@ -178,7 +195,7 @@ mk_bootimage()
 }
 
 function main_process(){
-	SOC_TYPE="rzpi"
+	SOC_TYPE=$1
 	WORKPWD=$(pwd)
 
     [ $# -eq 0 ] && help && exit
@@ -189,12 +206,12 @@ function main_process(){
 			-cl*)  mk_clean ; exit ;;
 			-g)    mk_getcode ; exit ;;
 			-rzpi) SOC_TYPE="rzpi"; echo ${SOC_TYPE};;
-			-v2l) SOC_TYPE="rzv2l"; echo ${SOC_TYPE};;
+			-v2l) SOC_TYPE="v2l"; echo ${SOC_TYPE};;
 			*)  log_error "-- invalid option -- "; help; exit;;
 		esac
 		shift
 	done
-	
+
 	check_host_require
 	if [[ ! -d $UBOOT_DIR ]] || [[ ! -d $TFA_DIR ]] ;then
         log_error "Error: No found source code "
@@ -204,8 +221,9 @@ function main_process(){
 	fi
 
 	cd ${WORKPWD}
-	mk_uboot
-	mk_atf
+	# mk_uboot
+	# mk_atf
+	
 	mk_bootimage
 	cp -f ${WORKPWD}/${TFA_DIR}/bl2_bp.srec ./bl2_bp_${SOC_TYPE}.srec
 	cp -f ${WORKPWD}/${TFA_DIR}/fip.srec ./fip_${SOC_TYPE}.srec
