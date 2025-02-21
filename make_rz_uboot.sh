@@ -2,7 +2,7 @@
 
 ARM_GCC_VERSION="SDK"
 if [ "${ARM_GCC_VERSION}" == "SDK" ] ; then
-source /opt/poky/3.1.26/environment-setup-aarch64-poky-linux
+source /opt/poky/3.1.14/environment-setup-aarch64-poky-linux
 else
 ## gcc 10.3 default
 TOOLCHAIN_PATH=$HOME/toolchain/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu/bin
@@ -11,15 +11,14 @@ export ARCH=arm64
 export CROSS_COMPILE=aarch64-none-linux-gnu-
 fi
 
-UBOOT_DIR="u-boot-sst"
-TFA_DIR="rz-atf-sst"
+UBOOT_DIR="u-boot"
+TFA_DIR="rz-atf"
 
-UBOOT_GIT_URL="git@github.com:vudangRVC/u-boot-sst.git"
-TFA_GIT_URL="git@github.com:vudangRVC/rz-atf-sst.git"
+UBOOT_GIT_URL="git@github.com:sonnguyenxg/u-boot.git"
+TFA_GIT_URL="git@github.com:sonnguyenxg/rz-atf.git"
 
 UBOOT_BRANCH="dunfell/rz-sbc"
 TFA_BRANCH="dunfell/rz-sbc"
-
 
 #===============MAIN BODY NO NEED TO CHANGE=========================
 help() {
@@ -122,7 +121,7 @@ mk_uboot()
     else
         make smarc-rzv2l_defconfig
     fi
-    make -j4
+    make -j16
     [ $? -ne 0 ] && log_error "Failed in ${UBOOT_DIR} ..." && exit
 }
 
@@ -130,8 +129,8 @@ mk_atf()
 {
     cd ${WORKPWD}/${TFA_DIR}/
     case ${SOC_TYPE} in
-        rzv2l)      echo "build atf for rz"; make PLAT=v2l BOARD=smarc_pmic_2  bl2 bl31;;
-        rzpi)    echo "build atf for rzpi"; unset CFLAGS LDFLAGS; make PLAT=g2l BOARD=sbc_1 all;
+        rzv2l)      echo "build atf for rz"; make -j16 PLAT=v2l BOARD=smarc_pmic_2  bl2 bl31;;
+        rzpi)    echo "build atf for rzpi"; unset CFLAGS LDFLAGS; make -j16 PLAT=g2l BOARD=sbc_1 all;
     esac
     [ $? -ne 0 ] && log_error "Failed in ${TFA_DIR} ..." && exit
 }
@@ -168,6 +167,9 @@ mk_bootimage()
 	# Create fip.bin
 	cp ../${UBOOT_DIR}/u-boot.bin ./
 	./fiptool create --align 16 --soc-fw build/g2l/${BUILDMODE}/bl31.bin --nt-fw ./u-boot.bin fip.bin
+
+	# cp ../${UBOOT_DIR}/u-boot-nodtb.bin ./
+	# ./fiptool create --align 16 --soc-fw build/g2l/${BUILDMODE}/bl31.bin --nt-fw ./u-boot-nodtb.bin fip.bin
 
 	# Convert to srec
 	objcopy -O srec --adjust-vma=0x00011E00 --srec-forceS3 -I binary bl2_bp.bin bl2_bp.srec
