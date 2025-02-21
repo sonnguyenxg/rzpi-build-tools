@@ -3,3 +3,6 @@ bl2_bp_rzpi.srec
 fip_rzpi.srec
 rz-atf-sst/
 u-boot-sst/
+*.srec
+rz-atf/
+u-boot/

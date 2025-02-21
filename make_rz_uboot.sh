@@ -221,9 +221,9 @@ function main_process(){
 	fi
 
 	cd ${WORKPWD}
-	# mk_uboot
-	# mk_atf
-	
+	mk_uboot
+	mk_atf
+
 	mk_bootimage
 	cp -f ${WORKPWD}/${TFA_DIR}/bl2_bp.srec ./bl2_bp_${SOC_TYPE}.srec
 	cp -f ${WORKPWD}/${TFA_DIR}/fip.srec ./fip_${SOC_TYPE}.srec
