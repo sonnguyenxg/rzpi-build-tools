@@ -3,3 +3,11 @@ bl2_bp_rzpi.srec
 fip_rzpi.srec
 rz-atf-sst/
 u-boot-sst/
+bl2_bp_v2l.srec
+bootloader-flasher/Flash_Writer_SCIF_RZV2L_SMARC_PMIC_DDR4_2GB_1PCS.mot
+fip_v2l.srec
+flash-writer_novech/
+rz-atf/
+rzg2_flash_writer/
+u-boot/
+.gitignore

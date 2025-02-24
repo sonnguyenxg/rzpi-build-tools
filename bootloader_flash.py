@@ -16,7 +16,7 @@ class FlashUtil:
 	def __init__(self):
 		self.__scriptDir = os.getcwd()
 		self.__rootDir = os.path.abspath(os.path.join(self.__scriptDir, '..', '..', '..', '..'))
-		self.__imagesDir = "."
+		self.__imagesDir = ".."
 		
 		self.__setupArgumentParser()
 
