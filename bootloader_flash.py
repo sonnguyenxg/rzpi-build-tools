@@ -16,7 +16,7 @@ class FlashUtil:
 	def __init__(self):
 		self.__scriptDir = os.getcwd()
 		self.__rootDir = os.path.abspath(os.path.join(self.__scriptDir, '..', '..', '..', '..'))
-		self.__imagesDir = ".."
+		self.__imagesDir = "."
 		
 		self.__setupArgumentParser()
 
@@ -36,7 +36,7 @@ class FlashUtil:
 		# Images
 		self.__parser.add_argument('--image_writer', default=f'{self.__imagesDir}/Flash_Writer_SCIF_rzpi.mot', dest='flashWriterImage', action='store', type=str, help="Path to Flash Writer image (defaults to: <path/to/your/package>/target/images/Flash_Writer_SCIF_rzpi.mot).")
 		self.__parser.add_argument('--image_bl2', default=f'{self.__imagesDir}/bl2_bp_rzpi.srec', dest='bl2Image', action='store', type=str, help='Path to bl2 image (defaults to: <path/to/your/package>/target/images/bl2_bp-rzpi.srec).')
-		self.__parser.add_argument('--image_fip', default=f'{self.__imagesDir}/fip_rzpi.srec', dest='fipImage', action='store', type=str, help='Path to FIP image (defaults to: <path/to/your/package>/target/images/fip-rzpi.srec).')
+		self.__parser.add_argument('--image_fip', default=f'{self.__imagesDir}/fip_rzpi-merge.srec', dest='fipImage', action='store', type=str, help='Path to FIP image (defaults to: <path/to/your/package>/target/images/fip-rzpi.srec).')
 
 		self.__args = self.__parser.parse_args()
 

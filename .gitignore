@@ -11,3 +11,4 @@ rz-atf/
 rzg2_flash_writer/
 u-boot/
 .gitignore
+*.srec

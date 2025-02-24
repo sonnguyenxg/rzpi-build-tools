@@ -155,6 +155,9 @@ check_extra_tools()
 
 mk_bootimage()
 {
+	cd ${WORKPWD}/${UBOOT_DIR}/
+	cat u-boot-nodtb.bin arch/arm/dts/rzpi.dtb > u-boot-merge-dtb.bin
+
 	check_extra_tools
 	cd ${WORKPWD}/${TFA_DIR}
 
@@ -168,12 +171,14 @@ mk_bootimage()
 	cp ../${UBOOT_DIR}/u-boot.bin ./
 	./fiptool create --align 16 --soc-fw build/g2l/${BUILDMODE}/bl31.bin --nt-fw ./u-boot.bin fip.bin
 
-	# cp ../${UBOOT_DIR}/u-boot-nodtb.bin ./
-	# ./fiptool create --align 16 --soc-fw build/g2l/${BUILDMODE}/bl31.bin --nt-fw ./u-boot-nodtb.bin fip.bin
+	# Create fip.bin
+	cp ../${UBOOT_DIR}/u-boot-merge-dtb.bin ./
+	./fiptool create --align 16 --soc-fw build/g2l/${BUILDMODE}/bl31.bin --nt-fw ./u-boot-merge-dtb.bin fip-merge.bin
 
 	# Convert to srec
 	objcopy -O srec --adjust-vma=0x00011E00 --srec-forceS3 -I binary bl2_bp.bin bl2_bp.srec
 	objcopy -I binary -O srec --adjust-vma=0x0000 --srec-forceS3 fip.bin fip.srec
+	objcopy -I binary -O srec --adjust-vma=0x0000 --srec-forceS3 fip-merge.bin fip-merge.srec
 	cd ${WORKPWD}
 }
 
@@ -209,6 +214,7 @@ function main_process(){
 	mk_bootimage
 	cp -f ${WORKPWD}/${TFA_DIR}/bl2_bp.srec ./bl2_bp_${SOC_TYPE}.srec
 	cp -f ${WORKPWD}/${TFA_DIR}/fip.srec ./fip_${SOC_TYPE}.srec
+	cp -f ${WORKPWD}/${TFA_DIR}/fip-merge.srec ./fip_${SOC_TYPE}-merge.srec
 	echo ""
 	echo "---Finished--- the boot image as follow:"
 	log_info bl2_bp_${SOC_TYPE}.srec
